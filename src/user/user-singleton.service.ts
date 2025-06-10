@@ -1,5 +1,4 @@
-import { Inject, Injectable, Scope } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class UserServiceSingleton {
