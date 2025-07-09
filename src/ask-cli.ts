@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { CommandFactory } from 'nest-commander';
 import { AskGptModule } from './ask/ask.module';
 

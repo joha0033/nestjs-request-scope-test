@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { CommandFactory } from 'nest-commander';
 import { BenchmarkComparisonModule } from './benchmark-comparison/benchmark-comparison.module';
 
