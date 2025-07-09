@@ -12,7 +12,7 @@
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: `{ getUserInfoRequestScoped }`,
+        query: `{ getUserPayment }`,
       }),
     });
 
