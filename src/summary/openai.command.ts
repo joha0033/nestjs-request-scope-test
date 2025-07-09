@@ -5,7 +5,10 @@ import { resolve, join } from 'path';
 
 const RESULTS_DIR = resolve('./benchmark-results');
 
-@Command({ name: 'summary', description: 'Compare latest benchmark results using AI' })
+@Command({
+  name: 'summary',
+  description: 'Compare latest benchmark results using AI',
+})
 export class OpenAICommand extends CommandRunner {
   constructor(private readonly openaiService: OpenAIService) {
     super();
@@ -28,7 +31,10 @@ export class OpenAICommand extends CommandRunner {
     console.log(`🗂️ Using files:\n- ${latestQuery1}\n- ${latestQuery2}`);
     console.log('\n⏳ Generating summary...\n');
 
-    const summary = await this.openaiService.summarize(fileAContent, fileBContent);
+    const summary = await this.openaiService.summarize(
+      fileAContent,
+      fileBContent,
+    );
 
     console.log('\n✅ Summary:\n');
     console.log(summary);

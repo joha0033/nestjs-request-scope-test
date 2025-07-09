@@ -1,8 +1,8 @@
-import { Context, Query, Resolver } from "@nestjs/graphql";
-import { Injectable } from "@nestjs/common";
-import { ModuleRef } from "@nestjs/core";
-import { PaymentService } from "../payment/payment.service";
-import { UserService } from "./user.service";
+import { Context, Query, Resolver } from '@nestjs/graphql';
+import { Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { PaymentService } from '../payment/payment.service';
+import { UserService } from './user.service';
 
 @Resolver()
 @Injectable()

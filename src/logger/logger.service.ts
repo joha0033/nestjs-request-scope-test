@@ -1,8 +1,8 @@
-import { Inject, Injectable, Optional, Scope } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
+import { Inject, Injectable, Optional, Scope } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 
 // This LoggerService is a REQUEST that can be used to impact the application performance.
-@Injectable({scope: Scope.REQUEST})
+@Injectable({ scope: Scope.REQUEST })
 export class LoggerService {
   @Optional() @Inject(REQUEST) context: any;
 
@@ -18,4 +18,3 @@ export class LoggerService {
     console.warn(`[WARN] ${message}`);
   }
 }
-
