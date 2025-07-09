@@ -2,12 +2,16 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver,  ApolloDriverConfig } from '@nestjs/apollo';
 import { UserResolver } from './user/user.resolver';
-import { UserServiceReqScoped } from './user/user-request.service';
-import { UserServiceSingleton } from './user/user-singleton.service';
-import { UserRequestScopedResolver } from './user/user-request-scoped.resolver';
-import { UserSingletonRequestScopedDepResolver } from './user/user-singleton-request-scoped-dep.resolver';
-import { UserServiceSingletonRequestScopedDep } from './user/user-singleton-request-scoped-dep.service';
 import { LoggerService } from './logger/logger.service';
+import { ProductResolver } from './products/product.resolver';
+import { PaymentResolver } from './payment/payment.resolver';
+import { UserService } from './user/user.service';
+import { PaymentService } from './payment/payment.service';
+import { ProductService } from './products/product.service';
+import { BenchmarkComparisonModule } from './benchmark-comparison/benchmark-comparison.module';
+import { OpenAIService } from './summary/openai.service';
+import { OpenAIModule } from './summary/openai.module';
+import { AskGptCommand } from './ask/ask.command';
 
 @Module({
   imports: [
@@ -15,17 +19,19 @@ import { LoggerService } from './logger/logger.service';
       autoSchemaFile: true,
       driver: ApolloDriver,
     }),
+    BenchmarkComparisonModule,
+    OpenAIModule,
   ],
   providers: [
-    UserResolver, 
-    UserRequestScopedResolver, 
-    UserServiceReqScoped, 
-    UserServiceSingleton,
-    
+    AskGptCommand,
+    OpenAIService,
+    UserResolver,
+    UserService,
     LoggerService,
-    // Logger service (req-scoped) is a dep of these.
-    UserSingletonRequestScopedDepResolver,
-    UserServiceSingletonRequestScopedDep,
+    PaymentResolver,
+    PaymentService,
+    ProductResolver,
+    ProductService,
   ],
 })
 export class AppModule {}

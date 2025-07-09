@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
-export class UserServiceSingleton {
+export class UserService {
   constructor() {
-    console.log('Service Instantiated');
+    console.count('NOT, REPEAT, NOT REQ SCOPED - UserService Instantiated');
   }
 
   getUser(context: any = null) {
