@@ -55,6 +55,10 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+# Autocannon files
+benchmark-results/query1-*.json
+benchmark-results/query2-*.json
+
 # Locust load testing files
 locust-report-*.html
 locust-stats-*.csv

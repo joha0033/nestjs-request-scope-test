@@ -23,7 +23,7 @@ interface LocustMetrics {
 
 @Injectable()
 export class LocustParserService {
-  private readonly LOCUST_REPORTS_DIR = resolve('./');
+  private readonly LOCUST_REPORTS_DIR = resolve('./locust');
 
   async parseLatestReport(): Promise<LocustMetrics | null> {
     const latestReport = await this.getLatestReportFile();
@@ -102,108 +102,119 @@ export class LocustParserService {
   }
 
   private extractMetricsFromHtml(htmlContent: string): Omit<LocustMetrics, 'scenario'> {
-    // Extract total requests
-    const totalRequestsMatch = htmlContent.match(/Total requests.*?(\d+)/s);
-    const totalRequests = totalRequestsMatch ? parseInt(totalRequestsMatch[1]) : 0;
-
-    // Extract failure rate
-    const failureRateMatch = htmlContent.match(/Failure rate.*?(\d+\.?\d*)%/s);
-    const failureRate = failureRateMatch ? parseFloat(failureRateMatch[1]) : 0;
-
-    // Extract average response time
-    const avgResponseTimeMatch = htmlContent.match(/Average response time.*?(\d+\.?\d*)\s*ms/s);
-    const averageResponseTime = avgResponseTimeMatch ? parseFloat(avgResponseTimeMatch[1]) : 0;
-
-    // Extract RPS
-    const rpsMatch = htmlContent.match(/Requests per second.*?(\d+\.?\d*)/s);
-    const requestsPerSecond = rpsMatch ? parseFloat(rpsMatch[1]) : 0;
-
-    // Extract user count
-    const userCountMatch = htmlContent.match(/Total users.*?(\d+)/s);
-    const userCount = userCountMatch ? parseInt(userCountMatch[1]) : 0;
-
-    // Extract duration
-    const durationMatch = htmlContent.match(/Test duration.*?(\d+[smh]+)/s);
-    const duration = durationMatch ? durationMatch[1] : 'unknown';
-
-    // Extract query breakdown from statistics table
-    const queryBreakdown = this.extractQueryBreakdown(htmlContent);
-
-    // Extract percentiles (P95, P99)
-    const p95Match = htmlContent.match(/95th percentile.*?(\d+\.?\d*)\s*ms/s);
-    const p99Match = htmlContent.match(/99th percentile.*?(\d+\.?\d*)\s*ms/s);
-    const p95ResponseTime = p95Match ? parseFloat(p95Match[1]) : 0;
-    const p99ResponseTime = p99Match ? parseFloat(p99Match[1]) : 0;
-
-    return {
-      totalRequests,
-      failureRate,
-      averageResponseTime,
-      p95ResponseTime,
-      p99ResponseTime,
-      requestsPerSecond,
-      queryBreakdown,
-      duration,
-      userCount
-    };
-  }
-
-  private extractQueryBreakdown(htmlContent: string): Array<{
-    query: string;
-    count: number;
-    averageTime: number;
-    errorRate: number;
-    rps: number;
-  }> {
-    const breakdown: Array<{
-      query: string;
-      count: number;
-      averageTime: number;
-      errorRate: number;
-      rps: number;
-    }> = [];
-
-    // Extract table rows with statistics
-    const tableMatch = htmlContent.match(/<table[^>]*class="statistics"[^>]*>(.*?)<\/table>/s);
-    if (!tableMatch) return breakdown;
-
-    const tableContent = tableMatch[1];
-    const rowMatches = tableContent.match(/<tr[^>]*>(.*?)<\/tr>/gs);
-    
-    if (!rowMatches) return breakdown;
-
-    for (const row of rowMatches) {
-      // Skip header rows
-      if (row.includes('<th>')) continue;
-
-      const cells = row.match(/<td[^>]*>(.*?)<\/td>/gs);
-      if (!cells || cells.length < 6) continue;
-
-      const cleanCell = (cell: string) => cell.replace(/<[^>]*>/g, '').trim();
-
-      const query = cleanCell(cells[0]);
-      const count = parseInt(cleanCell(cells[1])) || 0;
-      const averageTime = parseFloat(cleanCell(cells[4])) || 0;
-      const errorRate = parseFloat(cleanCell(cells[6])) || 0;
-      const rps = parseFloat(cleanCell(cells[7])) || 0;
-
-      // Filter out GraphQL queries (ignore totals and non-GraphQL endpoints)
-      if (query.includes('GraphQL') || query.includes('getUser') || query.includes('getProduct') || 
-          query.includes('getPayment') || query.includes('getUserPayment') || query.includes('Stress:') || 
-          query.includes('Browse:') || query.includes('Shopping:') || query.includes('Account:')) {
-        
-        breakdown.push({
-          query: query.replace(/^(GraphQL:\s*|Stress:\s*|Browse:\s*|Shopping:\s*|Account:\s*)/, ''),
-          count,
-          averageTime,
-          errorRate,
-          rps
-        });
+    try {
+      // Extract data from window.templateArgs JavaScript object
+      const templateArgsStart = htmlContent.indexOf('window.templateArgs = ');
+      if (templateArgsStart === -1) {
+        throw new Error('Could not find templateArgs in HTML');
       }
-    }
 
-    return breakdown;
+      // Find the start of the JSON object
+      const jsonStart = htmlContent.indexOf('{', templateArgsStart);
+      if (jsonStart === -1) {
+        throw new Error('Could not find JSON object start');
+      }
+
+      // Find the end of the JSON object by counting braces
+      let braceCount = 0;
+      let jsonEnd = jsonStart;
+      for (let i = jsonStart; i < htmlContent.length; i++) {
+        if (htmlContent[i] === '{') {
+          braceCount++;
+        } else if (htmlContent[i] === '}') {
+          braceCount--;
+          if (braceCount === 0) {
+            jsonEnd = i;
+            break;
+          }
+        }
+      }
+
+      const jsonString = htmlContent.substring(jsonStart, jsonEnd + 1);
+      const templateArgs = JSON.parse(jsonString);
+      
+      // Extract from requests_statistics array
+      const requestsStats = templateArgs.requests_statistics || [];
+      
+      // Find the Aggregated row
+      const aggregatedStats = requestsStats.find((stat: any) => stat.name === 'Aggregated');
+      
+      let totalRequests = 0;
+      let failureRate = 0;
+      let averageResponseTime = 0;
+      let requestsPerSecond = 0;
+      let p95ResponseTime = 0;
+      let p99ResponseTime = 0;
+      
+      if (aggregatedStats) {
+        totalRequests = aggregatedStats.num_requests || 0;
+        failureRate = aggregatedStats.num_failures && totalRequests > 0 ? 
+          (aggregatedStats.num_failures / totalRequests * 100) : 0;
+        averageResponseTime = aggregatedStats.avg_response_time || 0;
+        requestsPerSecond = aggregatedStats.current_rps || 0;
+        p95ResponseTime = aggregatedStats.response_time_percentile_0_95 || 0;
+        p99ResponseTime = aggregatedStats.response_time_percentile_0_99 || 0;
+      }
+
+      // Extract query breakdown (exclude Aggregated row)
+      const queryStats = requestsStats.filter((stat: any) => stat.name !== 'Aggregated');
+      const queryBreakdown = queryStats.map((stat: any) => ({
+        query: stat.name,
+        count: stat.num_requests || 0,
+        averageTime: stat.avg_response_time || 0,
+        errorRate: stat.num_failures && stat.num_requests > 0 ? 
+          (stat.num_failures / stat.num_requests * 100) : 0,
+        rps: stat.current_rps || 0,
+      }));
+
+      // Extract test metadata
+      let userCount = 0;
+      let duration = 'unknown';
+      
+      if (templateArgs.history && templateArgs.history.length > 0) {
+        const firstPoint = templateArgs.history[0];
+        userCount = firstPoint.user_count || 0;
+        
+        // Calculate duration from timestamps
+        if (templateArgs.start_time && templateArgs.end_time) {
+          const startTime = new Date(templateArgs.start_time);
+          const endTime = new Date(templateArgs.end_time);
+          const durationSeconds = Math.round((endTime.getTime() - startTime.getTime()) / 1000);
+          duration = `${durationSeconds}s`;
+        }
+      }
+
+      return {
+        totalRequests,
+        failureRate,
+        averageResponseTime,
+        p95ResponseTime,
+        p99ResponseTime,
+        requestsPerSecond,
+        queryBreakdown,
+        duration,
+        userCount
+      };
+    } catch (error) {
+      console.error('Error parsing HTML content:', error);
+      console.error('HTML content preview:', htmlContent.substring(0, 500));
+      
+      // Return default values if parsing fails
+      return {
+        totalRequests: 0,
+        failureRate: 0,
+        averageResponseTime: 0,
+        p95ResponseTime: 0,
+        p99ResponseTime: 0,
+        requestsPerSecond: 0,
+        queryBreakdown: [],
+        duration: 'unknown',
+        userCount: 0
+      };
+    }
   }
+
+
 
   private extractTimestamp(fileName: string): number {
     // Extract timestamp from filename if available
