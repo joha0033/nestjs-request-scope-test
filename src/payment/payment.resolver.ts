@@ -1,6 +1,6 @@
-import { Context, Query, Resolver } from "@nestjs/graphql";
-import { PaymentService } from "./payment.service";
-import { Inject } from "@nestjs/common";
+import { Context, Query, Resolver } from '@nestjs/graphql';
+import type { PaymentService } from './payment.service';
+import { Inject } from '@nestjs/common';
 
 @Resolver()
 export class PaymentResolver {

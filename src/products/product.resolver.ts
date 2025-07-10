@@ -1,6 +1,6 @@
-import { Query, Resolver } from "@nestjs/graphql";
-import { Inject } from "@nestjs/common";
-import { ProductService } from "./product.service";
+import { Query, Resolver } from '@nestjs/graphql';
+import { Inject } from '@nestjs/common';
+import type { ProductService } from './product.service';
 
 @Resolver()
 export class ProductResolver {

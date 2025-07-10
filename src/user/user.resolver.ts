@@ -1,15 +1,15 @@
-import { Context, Query, Resolver } from "@nestjs/graphql";
-import { Injectable } from "@nestjs/common";
-import { ModuleRef } from "@nestjs/core";
-import { PaymentService } from "../payment/payment.service";
-import { UserService } from "./user.service";
+import { Context, Query, Resolver } from '@nestjs/graphql';
+import { Injectable } from '@nestjs/common';
+import type { ModuleRef } from '@nestjs/core';
+import { PaymentService } from '../payment/payment.service';
+import type { UserService } from './user.service';
 
 @Resolver()
 @Injectable()
 export class UserResolver {
   constructor(
     private readonly moduleRef: ModuleRef,
-    private readonly userService: UserService,
+    private readonly userService: UserService
   ) {}
 
   @Query(() => String)

@@ -16,7 +16,7 @@
       }),
     });
 
-    autocannon.track(instance, { 
+    autocannon.track(instance, {
       renderProgressBar: true,
     });
   }

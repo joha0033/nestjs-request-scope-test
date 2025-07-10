@@ -4,7 +4,7 @@ import { OpenAI } from 'openai';
 @Injectable()
 export class OpenAIService {
   private readonly openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: process.env.OPENAI_API_KEY,
   });
 
   async summarize(fileA: string, fileB: string): Promise<string> {

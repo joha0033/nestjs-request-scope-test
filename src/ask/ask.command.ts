@@ -14,7 +14,7 @@ export class AskGptCommand extends CommandRunner {
       return;
     }
 
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       console.error(chalk.red('❌ OPENAI_API_KEY is not set.'));
       return;
